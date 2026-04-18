@@ -1,0 +1,43 @@
+name: Compilar AWS Backup Manager (Tauri)
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'aws-backup-tauri/**'
+  workflow_dispatch: # Permite ejecutar esto manualmente con un botón
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Instalar dependencias de Frontend (React)
+        working-directory: ./aws-backup-tauri
+        run: npm install
+
+      - name: Compilar la Aplicación Tauri
+        working-directory: ./aws-backup-tauri
+        run: npm run tauri build
+
+      - name: Subir el Ejecutable Generado
+        uses: actions/upload-artifact@v4
+        with:
+          name: AWS-Backup-Manager-Ejecutable
+          path: |
+            aws-backup-tauri/src-tauri/target/release/bundle/nsis/*.exe
+            aws-backup-tauri/src-tauri/target/release/bundle/msi/*.msi
+            aws-backup-tauri/src-tauri/target/release/*.exe
